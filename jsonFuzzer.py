@@ -1,3 +1,5 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 """
 Copyright (c) 2012, p4553d@googlemail.com
 
@@ -14,18 +16,28 @@ ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 """
 
+
 import json
 import random
+import string
 from collections import defaultdict
+
 
 class jsonFuzzer:
 
     sourceSet = []
     keySet = []
-    valueSet = []
+    valueSet = [""]
 
-    PROB_REPLACE=0.5
-        
+    PROB_REPLACE=0.5    # probability for an object to be replaced by another one from the set
+
+    PROB_FREESTRING=0.2
+    SPECIAL_CHARS=False      # use of special characters
+    MAX_FREESTRING=1024     # max length of self-generated string
+
+    specialChars=u'ÄÖÜäöüß'
+
+    # Populate sets of keys and values with parts of learn set
     def extractParts(self, sub):
         if(isinstance(sub, dict)):
             for key, value in sub.items():
@@ -48,32 +60,44 @@ class jsonFuzzer:
 
         # Extract keys and values
         self.extractParts(example)
-        
+
         # Store as example
         self.sourceSet.append(example)
         return
-        
-    def harvestFolders():
-        return
-    
-    # TODO: Self-generated random keys
+
     def sloppyKey(self, key):
         if(random.random()>self.PROB_REPLACE):
             retKey=key
         else:
-            retKey=self.keySet[random.randint(0, len(self.keySet)-1)]
+            if(random.random()<self.PROB_FREESTRING):
+                retKey=self.generateString()
+            else:
+                retKey=self.keySet[random.randint(0, len(self.keySet)-1)]
         return retKey
-    
-    # TODO: Self-generated, complex values
+
     def sloppyValue(self, value):
         if(random.random()>self.PROB_REPLACE):
             retValue=value
         else:
-            retValue=self.valueSet[random.randint(0, len(self.valueSet)-1)]
+            if(random.random()<self.PROB_FREESTRING):
+                retValue=self.generateString()
+            else:
+                retValue=self.valueSet[random.randint(0, len(self.valueSet)-1)]
         return retValue
 
+    def generateString(self):
+        genStr = string.printable
+
+        if(self.SPECIAL_CHARS==True):
+            genStr = genStr + self.specialChars
+
+        ret = u''
+        for i in range(random.randint(0,self.MAX_FREESTRING)):
+            ret = ret + random.choice(genStr)
+        return ret
+
     def sloppyCopy(self, source):
-        target = ""
+        target = u''
         if(isinstance(source, dict)):
             target={}
             for key, value in source.items():
@@ -93,8 +117,8 @@ class jsonFuzzer:
         # pick a random source test
         r = random.randint(0,len(self.sourceSet)-1)
         srcTest = self.sourceSet[r]
-        
+
         # make deep-copy and mutate
         retTest = self.sloppyCopy(srcTest)
         return retTest
-    
+
