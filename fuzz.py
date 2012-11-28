@@ -22,31 +22,33 @@ import jsonFuzzer
 
 import glob
 
+
 def usage():
     print "jsonFuzzer Example application"
     print "Usage: fuzz.py <folder>"
     print "\twhere folder contains JSON examples"
 
-def main(argv = sys.argv):
 
-    if(len(argv)<2):
+def main(argv=sys.argv):
+
+    if len(argv) < 2:
         usage()
         exit(1)
 
     jf = jsonFuzzer.jsonFuzzer()
 
-    path =  argv[1]+"/*.json"
+    path = argv[1] + "/*.json"
     for j in glob.glob(path):
-        jstream = open (j, "r")
+        jstream = open(j, "r")
         jo = json.load(jstream)
 
         jf.putExample(jo)
 
-    jf.PROB_REPLACE=0.5
-    jf.PROB_FREESTRING=0.5
+    jf.PROB_REPLACE = 0.5
+    jf.PROB_FREESTRING = 0.5
 
     for i in range(10):
-        jTest=jf.generateTest()
+        jTest = jf.generateTest()
         print json.dumps(jTest)
         print "\n----\n\n"
 
