@@ -29,24 +29,25 @@ class jsonFuzzer:
     keySet = []
     valueSet = [""]
 
-    PROB_REPLACE=0.5    # probability for an object to be replaced by another one from the set
+    # probability for an object to be replaced by another one from the set
+    PROB_REPLACE = 0.5
 
-    PROB_FREESTRING=0.2
-    SPECIAL_CHARS=False      # use of special characters
-    MAX_FREESTRING=1024     # max length of self-generated string
+    PROB_FREESTRING = 0.2
+    SPECIAL_CHARS = False      # use of special characters
+    MAX_FREESTRING = 1024      # max length of self-generated string
 
-    specialChars=u'ÄÖÜäöüß'
+    specialChars = u'ÄÖÜäöüß'
 
     # Populate sets of keys and values with parts of learn set
     def extractParts(self, sub):
-        if(isinstance(sub, dict)):
+        if (isinstance(sub, dict)):
             for key, value in sub.items():
                 # collect all strings for key set, plausibiliy check
-                if (isinstance(key,basestring)):
+                if isinstance(key, basestring):
                     self.keySet.append(key)
                 self.extractParts(value)
 
-        if(isinstance(sub, list)):
+        if isinstance(sub, list):
             for value in sub:
                 self.extractParts(value)
 
@@ -55,7 +56,7 @@ class jsonFuzzer:
         return
 
     def putExample(self, example):
-        if (isinstance(example, dict)==False):
+        if not isinstance(example, dict):
             raise WrongType
 
         # Extract keys and values
@@ -66,46 +67,45 @@ class jsonFuzzer:
         return
 
     def sloppyKey(self, key):
-        if(random.random()>self.PROB_REPLACE):
-            retKey=key
+        if random.random() > self.PROB_REPLACE:
+            retKey = key
         else:
-            if(random.random()<self.PROB_FREESTRING):
-                retKey=self.generateString()
+            if random.random() < self.PROB_FREESTRING:
+                retKey = self.generateString()
             else:
-                retKey=self.keySet[random.randint(0, len(self.keySet)-1)]
+                retKey = self.keySet[random.randint(0, len(self.keySet) - 1)]
         return retKey
 
     def sloppyValue(self, value):
-        if(random.random()>self.PROB_REPLACE):
-            retValue=value
+        if random.random() > self.PROB_REPLACE:
+            retValue = value
+        elif random.random() < self.PROB_FREESTRING:
+            retValue = self.generateString()
         else:
-            if(random.random()<self.PROB_FREESTRING):
-                retValue=self.generateString()
-            else:
-                retValue=self.valueSet[random.randint(0, len(self.valueSet)-1)]
+            retValue = self.valueSet[random.randint(0, len(self.valueSet) - 1)]
         return retValue
 
     def generateString(self):
         genStr = string.printable
 
-        if(self.SPECIAL_CHARS==True):
+        if self.SPECIAL_CHARS:
             genStr = genStr + self.specialChars
 
         ret = u''
-        for i in range(random.randint(0,self.MAX_FREESTRING)):
+        for i in range(random.randint(0, self.MAX_FREESTRING)):
             ret = ret + random.choice(genStr)
         return ret
 
     def sloppyCopy(self, source):
         target = u''
-        if(isinstance(source, dict)):
-            target={}
+        if isinstance(source, dict):
+            target = {}
             for key, value in source.items():
                 z = self.sloppyCopy(value)
                 target[self.sloppyKey(key)] = z
         else:
-            if(isinstance(source, list)):
-                target=[]
+            if isinstance(source, list):
+                target = []
                 for value in source:
                     z = self.sloppyCopy(value)
                     target.append(z)
@@ -115,10 +115,9 @@ class jsonFuzzer:
 
     def generateTest(self):
         # pick a random source test
-        r = random.randint(0,len(self.sourceSet)-1)
+        r = random.randint(0, len(self.sourceSet) - 1)
         srcTest = self.sourceSet[r]
 
         # make deep-copy and mutate
         retTest = self.sloppyCopy(srcTest)
         return retTest
-
