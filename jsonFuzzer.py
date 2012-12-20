@@ -25,9 +25,9 @@ from collections import defaultdict
 
 class jsonFuzzer:
 
-    sourceSet = []
-    keySet = []
-    valueSet = [""]
+    sourceSet = [None]
+    keySet = [None, ""]
+    valueSet = [None, ""]
 
     # probability for an object to be replaced by another one from the set
     PROB_REPLACE = 0.5
@@ -73,7 +73,7 @@ class jsonFuzzer:
             if random.random() < self.PROB_FREESTRING:
                 retKey = self.generateString()
             else:
-                retKey = self.keySet[random.randint(0, len(self.keySet) - 1)]
+                retKey = random.choice(self.keySet)
         return retKey
 
     def sloppyValue(self, value):
@@ -82,7 +82,7 @@ class jsonFuzzer:
         elif random.random() < self.PROB_FREESTRING:
             retValue = self.generateString()
         else:
-            retValue = self.valueSet[random.randint(0, len(self.valueSet) - 1)]
+            retValue = random.choice(self.valueSet)
         return retValue
 
     def generateString(self):
